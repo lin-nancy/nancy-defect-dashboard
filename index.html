@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hello Nancy — Product Issue Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fcf7ed; --card:#fff; --ink:#1a1a1a; --muted:#6c6158; --line:#ece3d6;
+    --defect:#e5484d; --notsat:#ffac30; --accent:#ff30cc; --accent2:#ccfd28;
+    --shadow:0 1px 2px rgba(26,26,26,.05),0 1px 3px rgba(26,26,26,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{position:relative;padding:22px 24px;background:linear-gradient(180deg,#fff,#fffdf8);border-bottom:1px solid var(--line);overflow:hidden}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 60%,var(--accent2) 100%)}
+  .brand{display:flex;align-items:center;gap:18px;max-width:1280px;margin:0 auto;flex-wrap:wrap}
+  .brand .logo{height:44px;width:auto;display:block;flex:none}
+  .brand .titles{padding-left:18px;border-left:2px solid var(--line)}
+  h1{margin:0;font-family:Fraunces,Barlow,Georgia,serif;font-size:23px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+  .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+  @media(max-width:560px){.brand{gap:12px}.brand .titles{padding-left:0;border-left:0}.brand .logo{height:38px}h1{font-size:20px}}
+  main{padding:20px 24px;max-width:1280px;margin:0 auto}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+  .kpi .n{font-size:28px;font-weight:700;letter-spacing:-.02em;font-family:Barlow,Inter,sans-serif}
+  .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
+  .kpi.defect .n{color:var(--defect)} .kpi.notsat .n{color:var(--notsat)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow);margin-bottom:18px}
+  .panel h2{margin:0 0 12px;font-size:15px;font-weight:600;font-family:Barlow,Inter,sans-serif;letter-spacing:-.005em}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+  .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  select,input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-width:120px}
+  input[type=date]{min-width:140px}
+  button{font:inherit;padding:7px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button:hover{filter:brightness(.98)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{cursor:pointer;user-select:none;color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--card)}
+  th:hover{color:var(--ink)}
+  th .arr{opacity:.4;font-size:10px}
+  td.wrap{white-space:normal;max-width:360px;color:var(--muted)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
+  .tag.defect{background:#fdedec;color:var(--defect)} .tag.notsat{background:#fff1da;color:#8a5a00}
+  .pill{display:inline-block;padding:1px 7px;border-radius:6px;background:#f3ece0;color:var(--muted);font-size:11px}
+  .mfr{font-weight:600}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .tablewrap{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .muted{color:var(--muted)} .right{text-align:right}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .count{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="logo" src="./nancy-logo.png" alt="Hello Nancy" />
+    <div class="titles">
+      <h1>Product Issue Dashboard</h1>
+      <div class="sub" id="sub">Loading…</div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="panel">
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h2>Issues by product</h2><div id="chartProduct"></div></div>
+    <div class="panel"><h2>Issues by reason</h2><div id="chartReason"></div>
+      <div class="legend"><span><i style="background:var(--defect)"></i>Product Defect</span><span><i style="background:var(--notsat)"></i>Not Satisfied</span></div>
+    </div>
+  </div>
+
+  <div class="panel"><h2>Trend over time (weekly)</h2><div id="chartTrend"></div>
+    <div class="legend"><span><i style="background:var(--defect)"></i>Defect</span><span><i style="background:var(--notsat)"></i>Not Satisfied</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h2>Issues by factory</h2><div id="chartFactory"></div></div>
+    <div class="panel"><h2>About factory data</h2>
+      <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0">
+        Factory is attributed only for <b>Lem</b> units whose lot/batch matched a fulfillment sheet —
+        the live <b>Stord</b> ("Hello Nancy.Orders.Lots") and <b>Portless</b> ("Hello Nancy Batch Tracing")
+        sheets, joined by order number. Each covers only part of the window so far, so units ordered outside
+        their coverage show no factory yet — this chart fills in as both sheets grow.
+      </p>
+      <div class="muted" id="factoryNote" style="font-size:12.5px;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Detail</h2>
+    <div class="count" id="count"></div>
+    <div class="tablewrap"><table id="table"><thead></thead><tbody></tbody></table></div>
+  </div>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
