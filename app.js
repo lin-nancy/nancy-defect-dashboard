@@ -123,6 +123,7 @@ function render() {
   renderReason(rows);
   renderTrend(rows);
   renderFactory(rows);
+  renderFactoryRate();
   renderTable(rows);
 }
 
@@ -151,17 +152,17 @@ function svg(w, h) { return el('div', { html: `<svg viewBox="0 0 ${w} ${h}" widt
 function renderBar(sel, data, opts = {}) {
   const host = $(sel); host.innerHTML = '';
   if (!data.length) { host.append(el('div', { class: 'empty' }, 'No data')); return; }
-  const W = 520, rowH = 26, pad = 8, labelW = opts.labelW || 110, max = Math.max(...data.map((d) => d.value), 1);
+  const W = 520, rowH = 26, pad = 8, labelW = opts.labelW || 110, valW = opts.valW || 60, max = Math.max(...data.map((d) => d.value), 1);
   const H = pad * 2 + data.length * rowH;
   const s = svg(W, H);
   data.forEach((d, i) => {
     const y = pad + i * rowH;
-    const bw = (W - labelW - 60) * (d.value / max);
+    const bw = (W - labelW - valW) * (d.value / max);
     const label = opts.icons ? iconFor(d.label) + ' ' + d.label : d.label;
     const fill = opts.colorFor ? (opts.colorFor(d.label) || 'var(--accent)') : (opts.color || 'var(--accent)');
     s.append(mk('text', { x: labelW - 8, y: y + 15, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--ink)' }, label));
     s.append(mk('rect', { x: labelW, y: y + 4, width: Math.max(bw, 1), height: rowH - 12, rx: 4, fill }));
-    s.append(mk('text', { x: labelW + Math.max(bw, 1) + 6, y: y + 15, 'font-size': 12, fill: 'var(--muted)' }, String(d.value)));
+    s.append(mk('text', { x: labelW + Math.max(bw, 1) + 6, y: y + 15, 'font-size': 12, fill: 'var(--muted)' }, opts.fmt ? opts.fmt(d) : String(d.value)));
   });
   host.append(s);
 }
@@ -203,6 +204,38 @@ function renderFactory(rows) {
     note.textContent = known.length
       ? `Showing ${known.length} attributed case${known.length === 1 ? '' : 's'} (of ${rows.length} in view).`
       : 'No factory-attributed cases match the current filters.';
+  }
+}
+
+// Defect rate by factory = each factory's product-issue cases divided by the
+// TOTAL LEM units we can trace to that factory (the denominator lives in
+// summary.factoryTotals). This is an all-time rate over the full dataset, so it
+// deliberately ignores the interactive filters — the denominator is every
+// shipped unit, not just the ones in the current view.
+function renderFactoryRate() {
+  const host = $('#chartFactoryRate'); if (!host) return; host.innerHTML = '';
+  const totals = (DATA.summary && DATA.summary.factoryTotals) || {};
+  const byMfr = (DATA.summary && DATA.summary.byManufacturer) || {};
+  const facs = ['Eryi', 'Liten', 'Kings'].filter((f) => totals[f]);
+  if (!facs.length) { host.append(el('div', { class: 'empty' }, 'No factory totals available')); return; }
+  const data = facs.map((f) => {
+    const issues = byMfr[f] || 0, total = totals[f] || 0;
+    return { label: f, value: total ? (issues / total) * 100 : 0, issues, total };
+  }).sort((a, b) => b.value - a.value);
+  renderBar('#chartFactoryRate', data, {
+    labelW: 72, valW: 150,
+    colorFor: (label) => FACTORY_COLORS[label] || 'var(--accent)',
+    fmt: (d) => `${d.value.toFixed(2)}%  ·  ${d.issues.toLocaleString()} / ${d.total.toLocaleString()}`,
+  });
+  const note = $('#factoryRateNote');
+  if (note) {
+    const tot = facs.reduce((a, f) => a + (totals[f] || 0), 0);
+    const iss = facs.reduce((a, f) => a + (byMfr[f] || 0), 0);
+    note.innerHTML = `Each factory's product-issue cases (Product Defect + Not Satisfied) ÷ the total LEM units we can trace to that factory `
+      + `via the Stord + Portless sheets &mdash; ${tot.toLocaleString()} units total (`
+      + facs.map((f) => `${esc(f)} ${(totals[f] || 0).toLocaleString()}`).join(' · ') + `). `
+      + `Overall ${iss.toLocaleString()} of ${tot.toLocaleString()} traced units came back with an issue. `
+      + `<b>This rate is all-time and not affected by the filters above</b>, since the denominator is every shipped unit &mdash; limited to the date range each fulfillment sheet covers.`;
   }
 }
 

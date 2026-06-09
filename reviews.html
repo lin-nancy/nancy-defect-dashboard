@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hello Nancy — Product Issue Dashboard</title>
+<title>Hello Nancy — Reviews vs Sales</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#fcf7ed; --card:#fff; --ink:#1a1a1a; --muted:#6c6158; --line:#ece3d6;
-    --defect:#e5484d; --notsat:#ffac30; --accent:#ff30cc; --accent2:#ccfd28;
+    --defect:#e5484d; --notsat:#ffac30; --accent:#ff30cc; --accent2:#ccfd28; --star:#ffac30;
     --shadow:0 1px 2px rgba(26,26,26,.05),0 1px 3px rgba(26,26,26,.08);
   }
   *{box-sizing:border-box}
@@ -28,38 +28,35 @@
   .nav a:hover{filter:brightness(.98)}
   @media(max-width:560px){.brand{gap:12px}.brand .titles{padding-left:0;border-left:0}.brand .logo{height:38px}h1{font-size:20px}.nav{margin-left:0;width:100%}}
   main{padding:20px 24px;max-width:1280px;margin:0 auto}
+  .banner{background:#fff7ea;border:1px solid #f1d9a8;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12.5px;line-height:1.6;color:#7a5a12}
+  .banner b{color:#5e4308}
+  .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-width:130px}
+  button{font:inherit;padding:7px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button:hover{filter:brightness(.98)}
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
   .kpi .n{font-size:28px;font-weight:700;letter-spacing:-.02em;font-family:Barlow,Inter,sans-serif}
   .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
-  .kpi.defect .n{color:var(--defect)} .kpi.notsat .n{color:var(--notsat)}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow);margin-bottom:18px}
-  .panel h2{margin:0 0 12px;font-size:15px;font-weight:600;font-family:Barlow,Inter,sans-serif;letter-spacing:-.005em}
+  .panel h2{margin:0 0 4px;font-size:15px;font-weight:600;font-family:Barlow,Inter,sans-serif;letter-spacing:-.005em}
+  .panel .hint{color:var(--muted);font-size:12px;margin:0 0 12px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:860px){.grid2{grid-template-columns:1fr}}
-  .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
-  .field{display:flex;flex-direction:column;gap:4px}
-  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
-  select,input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-width:120px}
-  input[type=date]{min-width:140px}
-  button{font:inherit;padding:7px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}
-  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-  button:hover{filter:brightness(.98)}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   th{cursor:pointer;user-select:none;color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--card)}
   th:hover{color:var(--ink)}
   th .arr{opacity:.4;font-size:10px}
-  td.wrap{white-space:normal;max-width:360px;color:var(--muted)}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
-  .tag.defect{background:#fdedec;color:var(--defect)} .tag.notsat{background:#fff1da;color:#8a5a00}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .stars{color:var(--star);letter-spacing:1px}
   .pill{display:inline-block;padding:1px 7px;border-radius:6px;background:#f3ece0;color:var(--muted);font-size:11px}
-  .mfr{font-weight:600}
   a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  .tablewrap{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:10px}
-  .muted{color:var(--muted)} .right{text-align:right}
-  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
-  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .tablewrap{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  input[type=search]{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);min-width:200px}
   .count{color:var(--muted);font-size:12.5px;margin-bottom:8px}
   .empty{padding:40px;text-align:center;color:var(--muted)}
 </style>
@@ -69,58 +66,45 @@
   <div class="brand">
     <img class="logo" src="./nancy-logo.png" alt="Hello Nancy" />
     <div class="titles">
-      <h1>Product Issue Dashboard</h1>
+      <h1>Reviews vs Sales</h1>
       <div class="sub" id="sub">Loading…</div>
     </div>
     <nav class="nav">
-      <a href="./index.html" class="active">Product Issues</a>
-      <a href="./reviews.html">Reviews</a>
+      <a href="./index.html">Product Issues</a>
+      <a href="./reviews.html" class="active">Reviews</a>
     </nav>
   </div>
 </header>
 <main>
+  <div class="banner" id="banner"></div>
+
+  <div class="panel">
+    <div class="filters" id="filters">
+      <div class="field"><label>From month</label><select id="fFrom"></select></div>
+      <div class="field"><label>To month</label><select id="fTo"></select></div>
+      <div class="field"><label>&nbsp;</label><button class="primary" id="fReset">Reset to Jan→present</button></div>
+      <div class="field"><label>&nbsp;</label><span class="hint" id="rangeLabel"></span></div>
+    </div>
+  </div>
+
   <div class="kpis" id="kpis"></div>
 
-  <div class="panel">
-    <div class="filters" id="filters"></div>
-  </div>
-
   <div class="grid2">
-    <div class="panel"><h2>Issues by product</h2><div id="chartProduct"></div></div>
-    <div class="panel"><h2>Issues by reason</h2><div id="chartReason"></div>
-      <div class="legend"><span><i style="background:var(--defect)"></i>Product Defect</span><span><i style="background:var(--notsat)"></i>Not Satisfied</span></div>
-    </div>
+    <div class="panel"><h2>Reviews by product</h2><p class="hint">Reviews received in the selected range</p><div id="chartReviews"></div></div>
+    <div class="panel"><h2>Reviews per 100 units sold</h2><p class="hint">Reviews ÷ units sold, same range — % of buyers who left a review</p><div id="chartRate"></div></div>
   </div>
 
-  <div class="panel"><h2>Trend over time (weekly)</h2><div id="chartTrend"></div>
-    <div class="legend"><span><i style="background:var(--defect)"></i>Defect</span><span><i style="background:var(--notsat)"></i>Not Satisfied</span></div>
-  </div>
-
-  <div class="grid2">
-    <div class="panel"><h2>Issues by factory</h2><div id="chartFactory"></div></div>
-    <div class="panel"><h2>About factory data</h2>
-      <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0">
-        Factory is attributed only for <b>Lem</b> units whose lot/batch matched a fulfillment sheet —
-        the live <b>Stord</b> ("Hello Nancy.Orders.Lots") and <b>Portless</b> ("Hello Nancy Batch Tracing")
-        sheets, joined by order number. Each covers only part of the window so far, so units ordered outside
-        their coverage show no factory yet — this chart fills in as both sheets grow.
-      </p>
-      <div class="muted" id="factoryNote" style="font-size:12.5px;margin-top:10px"></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Defect rate by factory <span class="muted" style="font-weight:400;font-size:12px;font-family:Inter,sans-serif">— issues ÷ units we can trace to each factory</span></h2>
-    <div id="chartFactoryRate"></div>
-    <div class="muted" id="factoryRateNote" style="font-size:12.5px;line-height:1.6;margin-top:10px"></div>
+  <div class="panel"><h2>Reviews &amp; units sold by month</h2><p class="hint">Trend across the selected range</p><div id="chartTrend"></div>
+    <div class="legend" style="display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;background:var(--accent)"></i>Reviews</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;background:#5b8def"></i>Units sold</span></div>
   </div>
 
   <div class="panel">
     <h2>Detail</h2>
+    <div style="margin:2px 0 10px"><input type="search" id="q" placeholder="filter products…" /></div>
     <div class="count" id="count"></div>
     <div class="tablewrap"><table id="table"><thead></thead><tbody></tbody></table></div>
   </div>
 </main>
-<script src="./app.js"></script>
+<script src="./reviews.js"></script>
 </body>
 </html>
